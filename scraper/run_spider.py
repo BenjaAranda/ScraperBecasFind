@@ -1,20 +1,35 @@
 #!/usr/bin/env python3
-"""
-CLI runner para el scraper de becas.
-Soporta ejecución individual de spiders y subida CSV a la API de BecasFind.
 
-Uso:
-    python run_spider.py mineduc                          # Ejecuta solo el spider Mineduc
-    python run_spider.py mineduc --upload                 # Ejecuta y sube el CSV a la API
-    python run_spider.py mineduc --api-url http://...     # Especifica URL de la API
-    python run_spider.py all                              # Ejecuta todos los spiders
-"""
+import sys
+
+if sys.platform == "win32":
+    import asyncio
+
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+# CLI runner para el scraper de becas.
+# Soporta ejecucion individual de spiders y subida CSV a la API de BecasFind.
+#
+# Uso:
+#     python run_spider.py mineduc                          # Ejecuta solo el spider Mineduc
+#     python run_spider.py mineduc --upload                 # Ejecuta y sube el CSV a la API
+#     python run_spider.py mineduc --api-url http://...     # Especifica URL de la API
+#     python run_spider.py all                              # Ejecuta todos los spiders
 
 import argparse
 import csv
+import logging
 import os
-import sys
+import warnings
 from typing import Optional
+
+os.environ.setdefault("PYTHONASYNCIODEBUG", "0")
+
+logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+logging.getLogger("scrapy_playwright").setLevel(logging.CRITICAL)
+
+if sys.platform == "win32":
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 import requests
 from scrapy.crawler import CrawlerProcess
@@ -89,7 +104,7 @@ def run_spider(spider_name: str) -> bool:
         },
     })
 
-    process = CrawlerProcess(settings, install_root_handler=False)
+    process = CrawlerProcess(settings)
     process.crawl(f"{spider_name}_spider")
     process.start()
     return True

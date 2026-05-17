@@ -396,7 +396,7 @@ class MineducSpider(scrapy.Spider):
         text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ")
         return text
 
-    async def errback(self, failure):
+    def errback(self, failure):
         self.logger.error(
             f"Error en request: {failure.request.url} — {failure.value}"
         )
