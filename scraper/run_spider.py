@@ -118,7 +118,7 @@ def main():
         "spider",
         nargs="?",
         default="mineduc",
-        choices=["mineduc", "all"],
+        choices=["mineduc", "duoc", "all"],
         help="Spider a ejecutar (default: mineduc)",
     )
     parser.add_argument(
@@ -141,7 +141,7 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
     if args.spider == "all":
-        spiders = ["mineduc"]
+        spiders = ["mineduc", "duoc"]
     else:
         spiders = [args.spider]
 
