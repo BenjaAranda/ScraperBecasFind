@@ -90,7 +90,7 @@ def run_spider(spider_name: str) -> bool:
     })
 
     process = CrawlerProcess(settings, install_root_handler=False)
-    process.crawl(f"becas_scraper.spiders.{spider_name}_spider.{spider_name.title()}Spider")
+    process.crawl(f"{spider_name}_spider")
     process.start()
     return True
 
