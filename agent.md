@@ -47,7 +47,9 @@ Abreviaturas de región válidas: `XV, I, II, III, IV, V, VI, RM, VII, VIII, IX,
   ```
 - **Errbacks síncronos**: los errbacks de Scrapy deben ser `def errback()`, nunca `async def errback()`. Scrapy no maneja errbacks asíncronos.
 - **`process.crawl()` usa el `name` del spider**: pasar `"mineduc_spider"`, no la ruta del módulo.
-- **CSV encoding**: `utf-8-sig` (para compatibilidad con Excel).
+- **CSV encoding**: `utf-8` (sin BOM, para evitar errores de parseo en Java).
+- **Null-Safety**: Los spiders o pipelines NUNCA deben rellenar campos faltantes con textos como "N/A" o "No especificado". Deben usar `None` o `""` para que Java los procese como nulls y no rompa el tipado estricto (`NumberFormatException` al parsear campos numéricos o de fecha).
+- **Exportación**: Utilizar siempre `FEED_EXPORT_FIELDS` en settings para garantizar la presencia estricta de las 11 columnas canónicas en el CSV.
 - **Headers de CSV**: exactamente los 11 campos canónicos en el orden listado en la sección 3.
 - **Ejecución**: activar venv primero:
   ```powershell

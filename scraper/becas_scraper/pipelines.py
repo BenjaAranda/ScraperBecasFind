@@ -99,6 +99,10 @@ class BecaNormalizationPipeline:
 
         item.descripcion = truncate_description(item.descripcion)
 
+        for field_name in CSV_HEADER:
+            if getattr(item, field_name, None) is None:
+                setattr(item, field_name, "")
+
         item.scraped_at = datetime.now(timezone.utc).isoformat()
 
         return item
@@ -145,7 +149,7 @@ class CsvExportPipeline:
 
         logger.info(f"Exportando {len(self.items)} becas a {out_path}")
 
-        with open(out_path, "w", newline="", encoding="utf-8-sig") as f:
+        with open(out_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(
                 f,
                 fieldnames=CSV_HEADER,

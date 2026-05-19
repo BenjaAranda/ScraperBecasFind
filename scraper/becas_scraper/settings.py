@@ -41,6 +41,13 @@ LOG_LEVEL = "INFO"
 LOG_FORMAT = "%(asctime)s [%(name)s] %(levelname)s: %(message)s"
 LOG_DATEFORMAT = "%Y-%m-%d %H:%M:%S"
 
+FEED_EXPORT_ENCODING = "utf-8"
+
+FEED_EXPORT_FIELDS = [
+    "nombre", "institucion", "tipo_beca", "monto", "fecha_inicio",
+    "fecha_cierre", "rsh_maximo", "nem_minimo", "regiones", "descripcion", "url",
+]
+
 ITEM_PIPELINES = {
     "becas_scraper.pipelines.BecaValidationPipeline": 100,
     "becas_scraper.pipelines.BecaNormalizationPipeline": 200,
@@ -51,7 +58,7 @@ ITEM_PIPELINES = {
 FEEDS = {
     "output/becas_mineduc.csv": {
         "format": "csv",
-        "encoding": "utf-8-sig",
+        "encoding": "utf-8",
         "fields": [
             "nombre",
             "institucion",

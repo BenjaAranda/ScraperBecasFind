@@ -29,23 +29,7 @@ class DuocSpider(scrapy.Spider):
                     "playwright_include_page": True,
                     "playwright_page_goto_kwargs": {
                         "wait_until": "commit",
-                        "timeout": 30000,
-                    },
-                },
-                callback=self.parse,
-                errback=self.errback,
-            )
-
-    def start_requests(self):
-        for url in self.start_urls:
-            yield scrapy.Request(
-                url,
-                meta={
-                    "playwright": True,
-                    "playwright_include_page": True,
-                    "playwright_page_goto_kwargs": {
-                        "wait_until": "commit",
-                        "timeout": 30000,
+                        "timeout": 60000,
                     },
                 },
                 callback=self.parse,
@@ -54,13 +38,9 @@ class DuocSpider(scrapy.Spider):
 
     async def parse(self, response: Response):
         page = response.meta.get("playwright_page")
-
+        data = []
         try:
-            await page.wait_for_timeout(8000)
-        except Exception:
-            pass
-
-        try:
+            await page.wait_for_selector('.vc_tta-panel', timeout=20000)
             data = await page.evaluate("""
                 () => {
                     let panels = document.querySelectorAll('.vc_tta-panel');
@@ -79,10 +59,9 @@ class DuocSpider(scrapy.Spider):
             """)
         except Exception as e:
             self.logger.error(f"Error extrayendo datos del DOM: {e}")
-            data = []
-
-        if page:
-            await page.close()
+        finally:
+            if page:
+                await page.close()
 
         items_yielded = 0
         seen_tabs = set()

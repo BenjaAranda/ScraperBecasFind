@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
-if sys.platform == "win32":
-    import asyncio
-
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
 # CLI runner para el scraper de becas.
 # Soporta ejecucion individual de spiders y subida CSV a la API de BecasFind.
 #
@@ -17,23 +10,11 @@ if sys.platform == "win32":
 #     python run_spider.py all                              # Ejecuta todos los spiders
 
 import argparse
-import csv
-import logging
 import os
-import warnings
 from typing import Optional
 
-os.environ.setdefault("PYTHONASYNCIODEBUG", "0")
-
-logging.getLogger("asyncio").setLevel(logging.CRITICAL)
-logging.getLogger("scrapy_playwright").setLevel(logging.CRITICAL)
-
-if sys.platform == "win32":
-    warnings.filterwarnings("ignore", category=RuntimeWarning)
-
 import requests
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
+import subprocess
 
 
 API_LOGIN_URL = "http://localhost:8080/api/auth/login"
@@ -73,8 +54,17 @@ def upload_csv(api_base_url: str, token: str, csv_path: str) -> None:
                 headers={"Authorization": f"Bearer {token}"},
                 timeout=30,
             )
-        resp.raise_for_status()
+        if not resp.ok:
+            print(f"\n[ERROR HTTP {resp.status_code}] La API rechazó el CSV.")
+            print(f"Respuesta del servidor: {resp.text}")
+            return False
         result = resp.json()
+        if not isinstance(result, dict):
+            print(f"[UPLOAD] Respuesta inesperada de la API: {result}")
+            return
+        if result.get("error") or result.get("errors"):
+            print(f"[API ERROR]: {result}")
+            return
         data = result.get("data", result)
         print(f"[UPLOAD] Creadas: {data.get('creadas', 0)}, "
               f"Actualizadas: {data.get('actualizadas', 0)}, "
@@ -87,26 +77,19 @@ def upload_csv(api_base_url: str, token: str, csv_path: str) -> None:
 
 
 def run_spider(spider_name: str) -> bool:
-    settings = get_project_settings()
-    settings.set("FEEDS", {
-        f"output/becas_{spider_name}.csv": {
-            "format": "csv",
-            "encoding": "utf-8-sig",
-            "fields": [
-                "nombre", "institucion", "tipo_beca", "monto",
-                "fecha_inicio", "fecha_cierre", "rsh_maximo",
-                "nem_minimo", "regiones", "descripcion", "url",
-            ],
-            "item_export_kwargs": {
-                "export_empty_fields": True,
-                "include_headers_line": True,
-            },
-        },
-    })
+    print(f"\n{'='*60}")
+    print(f" Ejecutando spider: {spider_name} (vía Scrapy CLI)")
+    print(f"{'='*60}\n")
 
-    process = CrawlerProcess(settings)
-    process.crawl(f"{spider_name}_spider")
-    process.start()
+    result = subprocess.run(
+        ["scrapy", "crawl", spider_name + "_spider"],
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+    )
+
+    if result.returncode != 0:
+        print(f"\n❌ Error al ejecutar el spider {spider_name} (exit code: {result.returncode})")
+        return False
+
     return True
 
 
@@ -127,6 +110,11 @@ def main():
         help="Subir CSV a la API de BecasFind tras el scraping",
     )
     parser.add_argument(
+        "--only-upload",
+        action="store_true",
+        help="Sube el CSV existente sin ejecutar el scraper",
+    )
+    parser.add_argument(
         "--api-url",
         default="http://localhost:8080",
         help="URL base de la API BecasFind (default: http://localhost:8080)",
@@ -145,13 +133,11 @@ def main():
     else:
         spiders = [args.spider]
 
-    for spider_name in spiders:
-        print(f"\n{'='*60}")
-        print(f" Ejecutando spider: {spider_name}")
-        print(f"{'='*60}\n")
-        run_spider(spider_name)
+    if not args.only_upload:
+        for spider_name in spiders:
+            run_spider(spider_name)
 
-    if args.upload:
+    if args.upload or args.only_upload:
         print(f"\n{'='*60}")
         print(f" Subiendo CSV a la API: {args.api_url}")
         print(f"{'='*60}\n")
