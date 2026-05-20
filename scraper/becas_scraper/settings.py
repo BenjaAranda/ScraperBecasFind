@@ -55,30 +55,6 @@ ITEM_PIPELINES = {
     "becas_scraper.pipelines.CsvExportPipeline": 400,
 }
 
-FEEDS = {
-    "output/becas_mineduc.csv": {
-        "format": "csv",
-        "encoding": "utf-8",
-        "fields": [
-            "nombre",
-            "institucion",
-            "tipo_beca",
-            "monto",
-            "fecha_inicio",
-            "fecha_cierre",
-            "rsh_maximo",
-            "nem_minimo",
-            "regiones",
-            "descripcion",
-            "url",
-        ],
-        "item_export_kwargs": {
-            "export_empty_fields": True,
-            "include_headers_line": True,
-        },
-    },
-}
-
 PLAYWRIGHT_LAUNCH_OPTIONS = {
     "headless": True,
     "args": [

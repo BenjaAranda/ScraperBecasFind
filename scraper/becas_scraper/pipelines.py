@@ -149,7 +149,7 @@ class CsvExportPipeline:
 
         logger.info(f"Exportando {len(self.items)} becas a {out_path}")
 
-        with open(out_path, "w", newline="", encoding="utf-8") as f:
+        with open(out_path, "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(
                 f,
                 fieldnames=CSV_HEADER,
